@@ -3,6 +3,7 @@
   "short_name": "Calc",
   "description": "Une calculatrice simple et élégante",
   "start_url": "/Calculatrice-Test/index.html",
+  "scope": "/Calculatrice-Test/",
   "display": "standalone",
   "background_color": "#0d0d0d",
   "theme_color": "#0d0d0d",
