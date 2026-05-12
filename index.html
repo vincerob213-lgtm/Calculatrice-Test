@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Calc" />
+  <meta name="theme-color" content="#0d0d0d" />
+  <link rel="manifest" href="manifest.json" />
+  <title>Calc</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0d0d;
+      --surface: #1a1a1a;
+      --surface2: #242424;
+      --border: #2e2e2e;
+      --text: #f0ede8;
+      --muted: #6b6b6b;
+      --accent: #e8d5a3;
+      --accent2: #c9956a;
+      --op: #2a2420;
+      --op-text: #e8c49a;
+      --eq: #e8d5a3;
+      --eq-text: #0d0d0d;
+      --red: #c0392b;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text);
+      overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    .app {
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      max-width: 420px;
+      margin: 0 auto;
+      padding: env(safe-area-inset-top, 12px) 16px env(safe-area-inset-bottom, 16px);
+      gap: 12px;
+    }
+
+    .display {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 16px 8px 8px;
+      gap: 4px;
+      min-height: 0;
+    }
+
+    .expr {
+      font-family: 'DM Mono', monospace;
+      font-size: 15px;
+      color: var(--muted);
+      text-align: right;
+      min-height: 22px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      letter-spacing: 0.02em;
+    }
+
+    .number {
+      font-family: 'DM Mono', monospace;
+      font-size: clamp(40px, 11vw, 64px);
+      font-weight: 300;
+      text-align: right;
+      letter-spacing: -0.02em;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      line-height: 1;
+      color: var(--text);
+      transition: opacity 0.08s;
+    }
+
+    .number.flash { opacity: 0.4; }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 0 -4px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      padding-bottom: 4px;
+    }
+
+    button {
+      position: relative;
+      border: none;
+      cursor: pointer;
+      border-radius: 14px;
+      font-family: 'DM Mono', monospace;
+      font-size: 20px;
+      font-weight: 400;
+      height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.07s, opacity 0.07s;
+      -webkit-font-smoothing: antialiased;
+      letter-spacing: 0;
+      outline: none;
+      overflow: hidden;
+    }
+
+    button:active { transform: scale(0.93); opacity: 0.85; }
+
+    .btn-num {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      font-size: 22px;
+    }
+
+    .btn-op {
+      background: var(--op);
+      color: var(--op-text);
+      border: 1px solid #3a2e24;
+      font-size: 22px;
+    }
+
+    .btn-fn {
+      background: var(--surface2);
+      color: var(--muted);
+      font-size: 16px;
+      font-family: 'DM Sans', sans-serif;
+      border: 1px solid var(--border);
+    }
+
+    .btn-clear {
+      background: #1f1414;
+      color: #e07070;
+      border: 1px solid #3a2020;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+    }
+
+    .btn-eq {
+      background: var(--eq);
+      color: var(--eq-text);
+      border: none;
+      font-size: 24px;
+    }
+
+    .btn-zero { grid-column: span 2; justify-content: flex-start; padding-left: 28px; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="display">
+    <div class="expr" id="expr"></div>
+    <div class="number" id="display">0</div>
+  </div>
+  <div class="divider"></div>
+  <div class="grid">
+    <button class="btn-clear" onclick="pressBtn('C')">Effacer</button>
+    <button class="btn-fn" onclick="pressBtn('±')">+/−</button>
+    <button class="btn-fn" onclick="pressBtn('%')">%</button>
+    <button class="btn-op" onclick="pressBtn('/')">÷</button>
+
+    <button class="btn-num" onclick="pressBtn('7')">7</button>
+    <button class="btn-num" onclick="pressBtn('8')">8</button>
+    <button class="btn-num" onclick="pressBtn('9')">9</button>
+    <button class="btn-op" onclick="pressBtn('*')">×</button>
+
+    <button class="btn-num" onclick="pressBtn('4')">4</button>
+    <button class="btn-num" onclick="pressBtn('5')">5</button>
+    <button class="btn-num" onclick="pressBtn('6')">6</button>
+    <button class="btn-op" onclick="pressBtn('-')">−</button>
+
+    <button class="btn-num" onclick="pressBtn('1')">1</button>
+    <button class="btn-num" onclick="pressBtn('2')">2</button>
+    <button class="btn-num" onclick="pressBtn('3')">3</button>
+    <button class="btn-op" onclick="pressBtn('+')">+</button>
+
+    <button class="btn-num btn-zero" onclick="pressBtn('0')">0</button>
+    <button class="btn-num" onclick="pressBtn('.')">.</button>
+    <button class="btn-eq" onclick="pressBtn('=')">=</button>
+  </div>
+</div>
+
+<script>
+  let current = '0', expr = '', justCalc = false;
+  const disp = document.getElementById('display');
+  const exprEl = document.getElementById('expr');
+
+  function update() {
+    disp.textContent = current;
+    exprEl.textContent = expr || '';
+  }
+
+  function flash() {
+    disp.classList.add('flash');
+    setTimeout(() => disp.classList.remove('flash'), 80);
+  }
+
+  function pressBtn(btn) {
+    if (btn === 'C') {
+      current = '0'; expr = ''; justCalc = false;
+    } else if (btn === '⌫') {
+      if (justCalc) { current = '0'; expr = ''; justCalc = false; }
+      else { current = current.length > 1 ? current.slice(0, -1) : '0'; }
+    } else if (btn === '±') {
+      current = current.startsWith('-') ? current.slice(1) : (current !== '0' ? '-' + current : '0');
+    } else if (btn === '%') {
+      const val = parseFloat(current);
+      if (!isNaN(val)) current = String(parseFloat((val / 100).toPrecision(12)));
+    } else if (['+', '-', '*', '/'].includes(btn)) {
+      if (justCalc) { expr = current + ' ' + btn; justCalc = false; }
+      else if (expr && ['+', '-', '*', '/'].includes(expr.trim().slice(-1))) {
+        expr = expr.trim().slice(0, -1) + btn;
+      } else {
+        expr = (expr ? expr + ' ' + current : current) + ' ' + btn;
+      }
+      current = '0';
+    } else if (btn === '=') {
+      if (!expr) return;
+      const full = expr + ' ' + current;
+      try {
+        const result = Function('"use strict"; return (' + full + ')')();
+        expr = full + ' =';
+        current = String(parseFloat(result.toFixed(10)));
+        justCalc = true;
+        flash();
+      } catch (e) {
+        current = 'Erreur'; expr = ''; justCalc = true;
+      }
+    } else if (btn === '.') {
+      if (justCalc) { current = '0.'; expr = ''; justCalc = false; }
+      else if (!current.includes('.')) current += '.';
+    } else {
+      if (justCalc) { current = btn; expr = ''; justCalc = false; }
+      else current = current === '0' ? btn : current + btn;
+      if (current.length > 15) current = current.slice(0, 15);
+    }
+    update();
+  }
+
+  document.addEventListener('keydown', e => {
+    const map = { '0':'0','1':'1','2':'2','3':'3','4':'4','5':'5','6':'6','7':'7','8':'8','9':'9','+':'+','-':'-','*':'*','/':'/','Enter':'=','=':'=','Backspace':'⌫','Escape':'C','.':'.',',':'.' };
+    if (map[e.key]) { e.preventDefault(); pressBtn(map[e.key]); }
+  });
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+</script>
+</body>
+</html>
